@@ -6,6 +6,15 @@ set -e
 apt-get update
 apt-get install -y haproxy
 
+# Configure backend hostname resolution
+if ! grep -q "35.176.96.139.*7334-web-01" /etc/hosts; then
+    echo "35.176.96.139 7334-web-01 web-01" >> /etc/hosts
+fi
+
+if ! grep -q "35.176.161.100.*7334-web-02" /etc/hosts; then
+    echo "35.176.161.100 7334-web-02 web-02" >> /etc/hosts
+fi
+
 # Configure HAProxy
 cat > /etc/haproxy/haproxy.cfg <<'EOF'
 global
@@ -33,13 +42,12 @@ frontend http_front
 
 backend web_servers
         balance roundrobin
-        server web-01 35.176.96.139:80 check
-        server web-02 35.176.161.100:80 check
+        server web-01 7334-web-01:80 check
+        server web-02 7334-web-02:80 check
 EOF
 
-# Validate configuration before restarting
+# Validate and start HAProxy
 haproxy -c -f /etc/haproxy/haproxy.cfg
-
-# Enable and restart HAProxy
 systemctl enable haproxy
 service haproxy restart
+
