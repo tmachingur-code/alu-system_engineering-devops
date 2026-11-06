@@ -41,13 +41,15 @@ frontend http_front
         default_backend web_servers
 
 backend web_servers
+        mode http
         balance roundrobin
-        server web-01 7334-web-01:80 check
-        server web-02 7334-web-02:80 check
+        server 7334-web-01:35.176.96.139 check
+        server 7334-web-0:35.176.161.100 check
 EOF
 
 # Validate and start HAProxy
 haproxy -c -f /etc/haproxy/haproxy.cfg
 systemctl enable haproxy
 service haproxy restart
+
 
