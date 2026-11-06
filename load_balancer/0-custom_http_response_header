@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Configure Nginx with a custom X-Served-By response header
+
+apt-get update
+apt-get install -y nginx
+
+cat > /etc/nginx/conf.d/served_by.conf <<'EOF'
+add_header X-Served-By $hostname;
+EOF
+
+nginx -t && service nginx restart
