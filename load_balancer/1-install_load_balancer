@@ -33,8 +33,8 @@ frontend http_front
 
 backend web_servers
         balance roundrobin
-        server web01 35.176.96.139:80 check
-        server web02 35.176.161.100:80 check
+        server web-01 35.176.96.139:80 check
+        server web-02 35.176.161.100:80 check
 EOF
 
 # Validate configuration before restarting
