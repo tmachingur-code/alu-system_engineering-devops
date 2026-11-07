@@ -1,55 +1,27 @@
+
 #!/usr/bin/env bash
-# Install and configure HAProxy load balancer
+# Installs HAProxy and load balances web-01 and web-02 with round robin
 
-set -e
+sudo apt-get update -y
+sudo apt-get install -y haproxy
 
-apt-get update
-apt-get install -y haproxy
-
-# Configure backend hostname resolution
-if ! grep -q "35.176.96.139.*7334-web-01" /etc/hosts; then
-    echo "35.176.96.139 7334-web-01 web-01" >> /etc/hosts
-fi
-
-if ! grep -q "35.176.161.100.*7334-web-02" /etc/hosts; then
-    echo "35.176.161.100 7334-web-02 web-02" >> /etc/hosts
-fi
-
-# Configure HAProxy
-cat > /etc/haproxy/haproxy.cfg <<'EOF'
-global
-        log /dev/log local0
-        log /dev/log local1 notice
-        chroot /var/lib/haproxy
-        stats socket /run/haproxy/admin.sock mode 660 level admin
-        stats timeout 30s
-        user haproxy
-        group haproxy
-        daemon
-
-defaults
-        log global
-        mode http
-        option httplog
-        option dontlognull
-        timeout connect 5000
-        timeout client 50000
-        timeout server 50000
+if ! grep -q "http_back" /etc/haproxy/haproxy.cfg; then
+    sudo tee -a /etc/haproxy/haproxy.cfg > /dev/null <<EOF
 
 frontend http_front
-        bind *:80
-        default_backend web_servers
+    bind *:80
+    mode http
+    default_backend http_back
 
-backend web_servers
-        mode http
-        balance roundrobin
-        server 7334-web-01:35.176.96.139 check
-        server 7334-web-0:35.176.161.100 check
+backend http_back
+    mode http
+    balance roundrobin
+    server web-01 35.176.96.139:80 check
+    server web-02 35.176.161.100:80 check
 EOF
+fi
 
-# Validate and start HAProxy
-haproxy -c -f /etc/haproxy/haproxy.cfg
-systemctl enable haproxy
-service haproxy restart
+echo "ENABLED=1" | sudo tee /etc/default/haproxy > /dev/null
 
-
+sudo haproxy -c -f /etc/haproxy/haproxy.cfg
+sudo service haproxy restart
