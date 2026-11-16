@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Restore Nginx configuration and run it outside init tracking
+ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+nginx
+rm -f /run/nginx.pid
